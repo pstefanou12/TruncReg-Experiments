@@ -1,0 +1,46 @@
+---
+title: "Trunc Reg Experiment and Results"
+output: html_notebook
+---
+```{r}
+library(truncreg)
+library(RandomFields)
+```
+
+
+```{r}
+# hyperparameters for synthetic data experiment
+n <- 100
+dims <- 10
+# noise variances
+vars <- seq(1,10)
+w <- rep.int(1, dims)
+w0 <- 1
+# generate random independent data
+# Unif(-5, 5) across dims dimensions
+X <- RFrdistr(RRunif(rep.int(-5, 10), rep.int(5, 10)), n=n/2, dim=dims)
+# truncation parameter 
+C <- 0
+
+for (var in vars) { 
+  # generate random noise
+  eps <- rnorm(n, mean = 0, sd = sqrt(var))
+  # calculate logits 
+  y <- w0 + w%*%X + eps
+  # assign to dataframe
+  d <- data.frame(X=t(X), y=t(y))
+  # truncate 
+  d$yt <- ifelse(t(y) > C, t(y), NA)
+  # run truncated regression 
+  fm_trunc <- truncreg(d$yt ~ t(X), data=d, point=C)
+  print(coef(fm_trunc))
+}
+
+```
+
+
+```{r}
+d
+```
+
+
