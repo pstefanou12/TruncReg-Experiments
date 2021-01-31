@@ -10,7 +10,7 @@ library(RandomFields)
 
 ```{r}
 # hyperparameters for synthetic data experiment
-n <- 100
+n <- 1000
 dims <- 10
 # noise variances
 vars <- seq(1,20)
@@ -41,11 +41,11 @@ for (var in vars) {
   coef_df <- coef(fm_trunc)
   # assign column names on first iteration
   if (var == 1) { 
-    names_ <- c(names(fm_trunc$coefficients))
+    names_ <- c(names(fm_trunc$coefficients), 'noise_var')
     colnames(results) <- names_
   }
   # add trunc reg results to df
-  coeff_ <- unname(fm_trunc$coefficients)
+  coeff_ <- c(unname(fm_trunc$coefficients), var)
   results[counter,] <- coeff_
   counter <- counter + 1
 }
