@@ -23,7 +23,7 @@ X <- RFrdistr(RRunif(rep.int(-5, 10), rep.int(5, 10)), n=n/2, dim=dims)
 C <- 0
 # csv file to export to
 csv = '/Users/patroklos/Desktop/truncreg.csv'
-results <- data.frame(matrix(ncol=12, nrow=length(vars)))
+results <- data.frame(matrix(ncol=dims+2, nrow=length(vars)))
 # counter to assign values to data frame
 counter = 1
 
