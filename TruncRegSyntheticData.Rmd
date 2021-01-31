@@ -13,7 +13,7 @@ library(RandomFields)
 n <- 100
 dims <- 10
 # noise variances
-vars <- seq(1,10)
+vars <- seq(1,20)
 w <- rep.int(1, dims)
 w0 <- 1
 # generate random independent data
@@ -21,6 +21,11 @@ w0 <- 1
 X <- RFrdistr(RRunif(rep.int(-5, 10), rep.int(5, 10)), n=n/2, dim=dims)
 # truncation parameter 
 C <- 0
+# csv file to export to
+csv = '/Users/patroklos/Desktop/truncreg.csv'
+results <- data.frame(matrix(ncol=12, nrow=length(vars)))
+# counter to assign values to data frame
+counter = 1
 
 for (var in vars) { 
   # generate random noise
@@ -33,14 +38,25 @@ for (var in vars) {
   d$yt <- ifelse(t(y) > C, t(y), NA)
   # run truncated regression 
   fm_trunc <- truncreg(d$yt ~ t(X), data=d, point=C)
-  print(coef(fm_trunc))
+  coef_df <- coef(fm_trunc)
+  # assign column names on first iteration
+  if (var == 1) { 
+    names_ <- c(names(fm_trunc$coefficients))
+    colnames(results) <- names_
+  }
+  # add trunc reg results to df
+  coeff_ <- unname(fm_trunc$coefficients)
+  results[counter,] <- coeff_
+  counter <- counter + 1
 }
+# write results to csv
+write.csv(results, csv)
+results
 
 ```
 
 
-```{r}
-d
+
 ```
 
 
