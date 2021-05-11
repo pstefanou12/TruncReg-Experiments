@@ -5,57 +5,61 @@ output: html_notebook
 ```{r}
 library(truncreg)
 library(RandomFields)
+library(mvtnorm)
 ```
 
 
 ```{r}
 # hyperparameters for synthetic data experiment
-n <- 100
+n <- 5000
 dims <- 10
 # noise variance
 var <- 5.0
 w <- rep.int(1, dims)
 w0 <- 1
-# generate random independent data
-# Unif(-5, 5) across dims dimensions
-X <- RFrdistr(RRunif(rep.int(-5, 10), rep.int(5, 10)), n=n/2, dim=dims)
+
 # truncation parameter 
-C <- seq(-2, 2)
+C <- seq(-5, 1)
 
 # csv file to export to
 csv = '/Users/patroklos/Desktop/truncreg_c.csv'
-results <- data.frame(matrix(ncol=dims+3, nrow=length(vars)))
+results <- data.frame(matrix(ncol=dims+3, nrow=length(C)*10))
 # counter to assign values to data frame
 counter = 1
+for (i in seq(1, 10)) { 
+  for (c in C) { 
+    # generate random noise
+    eps <- rnorm(n, mean = 0, sd = sqrt(var))
+    # generate random independent data
+    # Unif(-5, 5) across dims dimensions
+    # X <- RFrdistr(RRunif(rep.int(-5, dims), rep.int(5, dims)), n=n, dim=dims)
+    X <- rmvnorm(n, rep.int(0, dims), diag(10)/10)
 
-for (c in C) { 
-  # generate random noise
-  eps <- rnorm(n, mean = 0, sd = sqrt(var))
-  # calculate logits 
-  y <- w0 + w%*%X + eps
-  # assign to dataframe
-  d <- data.frame(X=t(X), y=t(y))
-  # truncate 
-  d$yt <- ifelse(t(y) > c, t(y), NA)
-  # run truncated regression 
-  fm_trunc <- truncreg(d$yt ~ t(X), data=d, point=c)
-  coef_df <- coef(fm_trunc)
-  # assign column names on first iteration
-  if (var == 1) { 
-    names_ <- c(names(fm_trunc$coefficients), 'noise_var')
-    colnames(results) <- names_
+    # calculate logits 
+    y <- w0 + w%*%t(X) + eps
+    # assign to dataframe
+    d <- data.frame(X=X, y=t(y))
+    # truncate 
+    d$yt <- ifelse(t(y) > c, t(y), NA)
+    # run truncated regression 
+    fm_trunc <- truncreg(d$yt ~ X, data=d, point=c)
+    coef_df <- coef(fm_trunc)
+    # assign column names on first iteration
+    if (var == 1 && counter == 1) { 
+      names_ <- c(names(fm_trunc$coefficients), 'c')
+      colnames(results) <- names_
+    }
+    # add trunc reg results to df
+    coeff_ <- c(unname(fm_trunc$coefficients), c)
+    results[counter,] <- coeff_
+    counter <- counter + 1
   }
-  # add trunc reg results to df
-  coeff_ <- c(unname(fm_trunc$coefficients), var)
-  results[counter,] <- coeff_
-  counter <- counter + 1
 }
 # write results to csv
 write.csv(results, csv)
 results
 
 ```
-
 
 
 ```
